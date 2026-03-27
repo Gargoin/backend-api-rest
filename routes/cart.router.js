@@ -4,19 +4,14 @@ const router = Router();
 
 import {
  addProduct,
-//  removeProduct,
-//  modifyProduct,
+ getCart,
+ clearCart,
 } from "../controllers/cart.controller.js";
 
 import { authMiddleware } from "../middlewares/auth.middleware.js";
 
-// router.post("/", (req, res) => {
-//     res.send("OK");
-// });
-
- router.post("/", addProduct);
-// router.post("/", authMiddleware, removeProduct); 
-// router.post("/", authMiddleware, modifyProduct);  
-
+router.post("/",authMiddleware, addProduct); // sin el authMiddleware tira un undefined en el user, por que no desencripta el token...
+router.get("/", authMiddleware, getCart);
+router.delete("/clear", authMiddleware, clearCart);
 
 export default router;
