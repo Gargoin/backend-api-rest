@@ -5,6 +5,7 @@ import express from "express";
 import cors from "cors";
 import "./db.js";
 
+import favoritesRouter from "./routes/favorites.router.js";
 import cartRouter from "./routes/cart.router.js";
 import productsRouter from "./routes/products.router.js";
 import categoriesRouter from "./routes/categories.router.js";
@@ -22,6 +23,7 @@ app.use(cors({ // se peude definir metodos, cabeceras y un monton de cosas mas
 }));
 app.use(express.json());
 
+app.use("/favorites", favoritesRouter);
 app.use("/cart", cartRouter);
 app.use("/products",productsRouter); // con esto hacemos que todo el modulo, necesita de login para verse
 app.use("/categories", categoriesRouter);

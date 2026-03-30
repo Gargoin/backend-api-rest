@@ -1,100 +1,7 @@
 import Cart from "../models/Cart.js"
 import Product from "../models/Product.js";
+import { getCategoryProducts } from "./categories.controller.js";
 
-
-
-
-
-//////////////// AÑADIR EL CARRITO /////////////////////////////////////////////////////
-
-// export const addProduct = async (req, res) => {
-
-//    try {
-//     //  console.log(req.body, req.user);
-
-//     // NO validamos user
-
-//     // Validamos que el producto exista
-
-//     if (req.body.product == "undefined"){ // esto si pasase evita consultar a base de datos
-//         return res.status(422).json({ error: "No product id" });
-//     }
-    
-//     const product = await Product.findById(req.body.product);
-
-//     if (!product) {
-//       return res.status(404).json({ error: "Product not found" });
-//     }
-
-
-//     if(req.body.quantity == undefined) { // si no hay un valor metido en quantity y nos saca un undefined, entonces pon "1" que es el undefined del model
-//       req.body.quantity = 1;
-//     };
-
-//     // Si viene la cantidad, tiene que ser mayor o igual a 1
-
-//     if (!Number.isInteger(req.body.quantity || req.body.quantity < 1 )) {
-//     return res.status(404).json({ error: "Invalid quantity" });
-
-//     }
-
-//     // validamos que tengamos stock
-    
-//     if (product.stock < req.body.quantity) {
-//         return res.status(404).json({ error: "Not enough stock" });
-//     }
-//     console.log(req.body);
-
-
-//     const cartExisting = await Cart.findOne({ // prgunatmos a la base de datos si el user ya tiene un carrito
-//       user: req.user.id,
-//     });
-
-
-//     if (!cartExisting) {
-
-
-//       const cart = new Cart({ // aqui definimos el cart
-      
-//       user: req.user.id,
-//       products: []
-
-//     })
-
-//     const item = { // esto seria un producto, hacemos una const 
-//       product: product.id,
-//       quantity: req.body.quantity
-//     }
-
-
-//     cart.products.push(item); // se inserta el item el products del cart
-
-//     await cart.save();
-
-//     res.status(201).json({message: "Carrito creado", cart});
-
-//     } else { // en esta parte el carrito ya existe de antes
-      
-//       const item = { // esto seria un producto, hacemos una const 
-//       product: product.id,
-//       quantity: req.body.quantity
-//     }
-
-//     cartExisting.products.push(item); 
-  
-//     await cartExisting.save();
-//     res.status(201).json({message: "Carrito actualizado", cartExisting});
-
-//     }
-
-//    }catch (error) {
-//     // console.log(error);
-//     res.status(500).json({error: "Internal Server Error"});
-//    }
-// };
-
-export const addProduct = async (req, res) => {
-};
 
  //////////////// OBTENER EL CARRITO /////////////////////////////////////////////////////
 
@@ -138,12 +45,18 @@ export const getCart = async (req,res) => {
       products: [],
     })
   };
+  // console.log(cart.products);
 
-  const productExist = cart.products.find(p => p.product === productId); // busca en el array "products" y por cada producto, compara el campo product con el productId (del req) y me devuelve si hay coincidencia
+  const productExist = cart.products.find((p) => p.product == productId); // busca en el array "products" y por cada producto, compara el campo product con el productId (del req) y me devuelve si hay coincidencia esto con == si pongo === falla, haria duplicados es demasiado estricto
+
+  
 
   if(productExist){
 
+   productExist.quantity += quantity; // sumamos las cnatidades del req y lo que hay 
+   
 
+    
 
   } else {
 
@@ -158,10 +71,12 @@ export const getCart = async (req,res) => {
 
 
   }
+    
+    
 
     await cart.save(); // guardamos
 
-    res.status(202).json({ message: "Carrito creado, cart"});
+    res.status(202).json({ message: "Carrito creado", cart});
 
 
 };
