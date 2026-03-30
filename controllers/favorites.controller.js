@@ -133,10 +133,11 @@ export const deleteFavorite = async (req, res) => {
     }
 
     
-    favorite.products = favorite.products.filter((item) => item.product.toString() !== id);
+    favorite.products = favorite.products.filter((p) => p.product != id);
+    
     await favorite.save();
 
-    res.status(200).send({ message: "Favorito borrado" });
+    res.status(200).send({ message: "Favorito borrado" , favorite });
 
   } catch (error) {
     if (error.name === "CastError") {

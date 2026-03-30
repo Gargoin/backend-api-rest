@@ -9,10 +9,10 @@ export const getCart = async (req,res) => {
   try {
     const cart = await Cart.findOne({ // prgunatmos a la base de datos si el user ya tiene un carrito
       user: req.user.id,
-    });
+    }).populate("products.product", "name price"); // populamos para mostrar el name y price tb en el carrito
 
        if (!cart) { // si no lo hay pintamos uno vacio
-        const cart = new Cart({ // aqui definimos el cart
+        const newCart = new Cart({ // aqui definimos el cart
       
         user: req.user.id,
         products: []
@@ -22,7 +22,7 @@ export const getCart = async (req,res) => {
       }
 
   res.json(cart); // mostramos el carrito si lo hay
-  }catch{
+  }catch (error){
     res.status(500).json({error: "Internal Server Error"});
   }
 
@@ -34,8 +34,27 @@ export const getCart = async (req,res) => {
 
  export const addToCart = async (req, res) => {
 
-  const {product: productId, quantity = 1} = req.body; // desestructuramos del req body lo que nos interesa, el product y la cantidad, en este caso le ponemos un defalt = 1, si viniera un valor se pondria el que viene, al product le ponemos un alias, productId para no confundirnos
+  try{
+    const {product: productId, quantity = 1} = req.body; // desestructuramos del req body lo que nos interesa, el product y la cantidad, en este caso le ponemos un defalt = 1, si viniera un valor se pondria el que viene, al product le ponemos un alias, productId para no confundirnos
   const{id: userId} = req.user; // igual, desestructuramos el req.user para tener su id, y lo ponemos con un alias, userId
+
+
+  if(!productId){
+
+    return res.status(422).json({error: "El Id del producto es obligatorio"});
+
+  }
+  if(!Number.isInteger(quantity) || quantity < 1){ // si quantity no es un número entero o es menor a 1
+
+    return res.status(400).json({error: "La cantidad del producto no es correcta"});
+
+  }
+
+  const product = await Product.findById(productId);
+
+  if (!product) {
+    return res.status(404).json({error: "Product Not Found"});
+  }
 
   let cart = await Cart.findOne({user: userId}); //comparamos el user con userId, para ver si hay un carrito
 
@@ -49,16 +68,20 @@ export const getCart = async (req,res) => {
 
   const productExist = cart.products.find((p) => p.product == productId); // busca en el array "products" y por cada producto, compara el campo product con el productId (del req) y me devuelve si hay coincidencia esto con == si pongo === falla, haria duplicados es demasiado estricto
 
-  
 
   if(productExist){
+    if(productExist.quantity + quantity > product.stock) {
+      return res.status(400).json({error: "No hay suficiente stock"}); // si no existe, se suman y  si se pasa de cantidad con respecto al stock
+    }
 
-   productExist.quantity += quantity; // sumamos las cnatidades del req y lo que hay 
+      productExist.quantity += quantity; // esto igual, suma lo que hay
    
 
-    
-
   } else {
+    
+    if(quantity > product.stock) {
+      return res.status(400).json({error: "No hay suficiente stock"}); // si existe y se pasa de cantidad con respecto al stock
+    }
 
   const newProduct = { // creamos el nuevo producto
  
@@ -69,14 +92,24 @@ export const getCart = async (req,res) => {
 
     cart.products.push(newProduct); // agregamos el producto
 
-
   }
     
-    
-
     await cart.save(); // guardamos
+    cart = await Cart.findOne({ // prgunatmos a la base de datos si el user ya tiene un carrito
+      user: req.user.id,
+    }).populate("products.product", "name price");
 
     res.status(202).json({ message: "Carrito creado", cart});
+  
+  }catch (error) {
+
+    if(error.name == "CastError"){ // esto si el error es por poner mal algo
+      res.status(400).json({error: "Invalid ID"});
+    }
+
+    res.status(500).json({error: "Internal Server Error"});
+  
+  }
 
 
 };
@@ -122,7 +155,7 @@ export const clearCart = async (req,res) => {
     });
 
   if (!cart) { // si no lo hay pintamos uno vacio
-        const cart = new Cart({ // aqui definimos el cart
+        const newCart = new Cart({ // aqui definimos el cart
       
         user: req.user.id,
         products: []
@@ -140,6 +173,24 @@ export const clearCart = async (req,res) => {
     res.status(500).json({error: "Internal Server Error"});
   }
   
+};
 
+export const removeProductFromCart = async (req, res) => {
+
+  const { productId } = req.params;
+  const {id: userId} = req.user;
+
+  const cart = await Cart.findOne({ user: userId,});
+
+  if(!cart) {
+    return res.status(404).json({error: "No hay carrito"});
+  }
+
+    const filtered = cart.products.filter((p) => p.product != productId);
+
+    await cart.save();
+
+    res.json({filtered, products: cart.products});
 
 };
+ 
