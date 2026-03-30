@@ -175,7 +175,13 @@ export const clearCart = async (req,res) => {
   
 };
 
+
+
+
+//////////////// BORRAR UN SOLO PRODUCTO DEL CARRITO /////////////////////////////////////////////////////
+
 export const removeProductFromCart = async (req, res) => {
+try{
 
   const { productId } = req.params;
   const {id: userId} = req.user;
@@ -188,9 +194,24 @@ export const removeProductFromCart = async (req, res) => {
 
     const filtered = cart.products.filter((p) => p.product != productId);
 
-    await cart.save();
+    
 
-    res.json({filtered, products: cart.products});
+    // res.json({filtered, products: cart.products});
 
+    if (filtered.lenght == cart.products.length) {
+
+      return res.status(404).json({ error: "No se encontró el producto para borrar" });
+    }
+
+      cart.products = filtered;
+
+        await cart.save();
+      return res.json({message: "Porudcto eliminado del carrito", cart});
+
+} catch {
+
+   res.status(500).json({error: "Internal Server Error"});
+
+}
 };
  
