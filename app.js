@@ -30,4 +30,8 @@ app.use("/categories", categoriesRouter);
 app.use("/auth", authRouter); // le añadimos un prefijo a la ruta, que será /auth/register
 app.use(pingRouter);
 
+app.get("/prueba", (req, res) => {
+    res.send("Prueba de bueva rama");
+});
+
 export default app;
